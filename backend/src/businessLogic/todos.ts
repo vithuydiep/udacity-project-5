@@ -6,6 +6,8 @@ import { createLogger } from '../utils/logger'
 import * as uuid from 'uuid'
 // import * as createError from 'http-errors'
 import { TodoAccess } from '../dataLayer/todosAcess'
+import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
+import { TodoUpdate } from '../models/TodoUpdate'
 
 // TODO: Implement businessLogic
 const logger = createLogger('TodoAccess')
@@ -31,4 +33,25 @@ export async function CreateTodo(
   }
 
   return await todoAccess.createTodoItem(newItem)
+}
+
+export async function getTodosForUser(userId: string): Promise<TodoItem[]> {
+  logger.info('call to get list todo')
+  return todoAccess.getAllTodos(userId)
+}
+
+export async function updateTodo(userId: string, todoId: string, updateTodoRequest: UpdateTodoRequest) {
+  logger.info(`Updating todo ${todoId} for user ${userId}`, { userId, todoId, todoUpdate: updateTodoRequest })
+
+  const item = await todoAccess.getTodoItem(userId, todoId)
+
+  if (!item)
+    throw new Error('Item not found')  // FIXME: 404?
+
+  if (item.userId !== userId) {
+    logger.error(`User ${userId} does not have permission to update todo ${todoId}`)
+    throw new Error('User is not authorized to update item')  // FIXME: 403?
+  }
+
+  todoAccess.updateTodoItem(userId, todoId, updateTodoRequest as TodoUpdate)
 }

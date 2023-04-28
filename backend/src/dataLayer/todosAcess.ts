@@ -114,4 +114,22 @@ export class TodoAccess {
       })
       .promise()
   }
+
+  async getTodoItem(userId: string, todoId: string): Promise<TodoItem> {
+    logger.info('GET a todo by id', { userId, todoId })
+
+    const result = await this.docClient
+      .get({
+        TableName: this.todoTable,
+        Key: {
+          userId,
+          todoId
+        }
+      })
+      .promise()
+
+    const item = result.Item
+
+    return item as TodoItem
+  }
 }
