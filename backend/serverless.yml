@@ -208,12 +208,6 @@ functions:
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
       - Effect: Allow
         Action:
-          - dynamodb:GetItem
-          - dynamodb:PutItem
-          - dynamodb:UpdateItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action:
           - "xray:PutTraceSegments"
           - "xray:PutTelemetryRecords"
         Resource:
@@ -221,7 +215,6 @@ functions:
       - Effect: "Allow"
         Action:
           - dynamodb:Query
-          - dynamodb:Scan
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
@@ -279,19 +272,11 @@ resources:
               ProjectionType: ALL # What attributes will be copied to an index
 
     # TODO: Complete the bucket properties below. 
-    # Do not forget to add the CorsConfiguration propoerty
+    # Do not forget to add the CorsConfiguration property
     AttachmentsBucket:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
-        OwnershipControls:
-          Rules:
-            - ObjectOwnership: ObjectWriter
-        PublicAccessBlockConfiguration:
-          BlockPublicAcls: false
-          BlockPublicPolicy: false
-          IgnorePublicAcls: false
-          RestrictPublicBuckets: false
         CorsConfiguration:
           CorsRules:
             -
