@@ -72,25 +72,27 @@ export class TodoAccess {
         },
         ExpressionAttributeNames: {
           '#name': 'name'
-        }
+        },
+        ReturnValues: 'UPDATED_NEW'
       })
       .promise()
 
-    return todoUpdate
+    return todoUpdate as TodoUpdate
   }
 
-  async deleteTodoItem(todoId: string, userId: string): Promise<void> {
+  async deleteTodoItem(todoId: string, userId: string): Promise<string> {
     logger.info('call to delete todo item')
-
     await this.docClient
       .delete({
         TableName: this.todoTable,
         Key: {
+          userId,
           todoId,
-          userId
         }
       })
       .promise()
+
+      return todoId as string
   }
 
   async updateTodoAttachmentUrl(

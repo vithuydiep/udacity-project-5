@@ -40,18 +40,30 @@ export async function getTodosForUser(userId: string): Promise<TodoItem[]> {
   return todoAccess.getAllTodos(userId)
 }
 
-export async function updateTodo(userId: string, todoId: string, updateTodoRequest: UpdateTodoRequest) {
-  logger.info(`Updating todo ${todoId} for user ${userId}`, { userId, todoId, todoUpdate: updateTodoRequest })
+export async function updateTodo(
+  userId: string,
+  todoId: string,
+  updateTodoRequest: UpdateTodoRequest
+): Promise<TodoUpdate> {
+  logger.info('call to update todo')
+  return todoAccess.updateTodoItem(
+    todoId,
+    userId,
+    updateTodoRequest as TodoUpdate
+  )
+}
 
-  const item = await todoAccess.getTodoItem(userId, todoId)
+export async function deleteTodo(todoId: string, userId: string) {
+  logger.info('call to delete todo')
+  return todoAccess.deleteTodoItem(todoId, userId)
+}
 
-  if (!item)
-    throw new Error('Item not found')  // FIXME: 404?
-
-  if (item.userId !== userId) {
-    logger.error(`User ${userId} does not have permission to update todo ${todoId}`)
-    throw new Error('User is not authorized to update item')  // FIXME: 403?
-  }
-
-  todoAccess.updateTodoItem(userId, todoId, updateTodoRequest as TodoUpdate)
+export async function createAttachmentPresignedUrl(
+  todoId: string,
+  userId: string
+) {
+  logger.info('call attachment to do by user', userId)
+  const url = attachmentUtils.getUploadUrl(todoId)
+  await todoAccess.updateTodoAttachmentUrl(todoId, userId, url)
+  return url
 }
