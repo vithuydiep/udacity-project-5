@@ -40,6 +40,14 @@ export async function getTodosForUser(userId: string): Promise<TodoItem[]> {
   return todoAccess.getAllTodos(userId)
 }
 
+export async function searchTodoForUser(
+  userId: string,
+  keyword: string
+): Promise<TodoItem[]> {
+  logger.info('call to search todo')
+  return todoAccess.getTodoByText(userId, keyword)
+}
+
 export async function updateTodo(
   userId: string,
   todoId: string,
