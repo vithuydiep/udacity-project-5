@@ -17,6 +17,21 @@ export async function getTodos(idToken: string): Promise<Todo[]> {
   return response.data.items
 }
 
+export async function getSearchTodo(idToken: string, keyword: string): Promise<Todo[]> {
+  console.log('Fetching todos')
+
+  const response = await Axios.get(`${apiEndpoint}/todo/search/${keyword}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    },
+  })
+  console.log('Todos:', response.data)
+  return response.data.items
+}
+
+
+
 export async function createTodo(
   idToken: string,
   newTodo: CreateTodoRequest

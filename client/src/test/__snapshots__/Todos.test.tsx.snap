@@ -1,0 +1,86 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`check render todo list should render and match the snapshot 1`] = `
+<DocumentFragment>
+  <div>
+    <h1
+      class="ui header"
+    >
+      TODOs
+    </h1>
+    <div
+      class="row"
+    >
+      <div
+        class="sixteen wide column"
+      >
+        <div
+          class="ui fluid left action input"
+        >
+          <button
+            class="ui teal icon left labeled button"
+          >
+            <i
+              aria-hidden="true"
+              class="add icon"
+            />
+            New task
+          </button>
+          <input
+            placeholder="To change the world..."
+            type="text"
+          />
+        </div>
+      </div>
+      <div
+        class="sixteen wide column"
+      >
+        <div
+          class="ui divider"
+        />
+      </div>
+    </div>
+    <div
+      class="row"
+    >
+      <div
+        class="sixteen wide column"
+      >
+        <div
+          class="ui fluid left action input"
+        >
+          <button
+            class="ui teal icon left labeled button"
+          >
+            <i
+              aria-hidden="true"
+              class="search icon"
+            />
+            Search task
+          </button>
+          <input
+            placeholder="Press keyword to search..."
+            type="text"
+          />
+        </div>
+      </div>
+      <div
+        class="sixteen wide column"
+      >
+        <div
+          class="ui divider"
+        />
+      </div>
+    </div>
+    <div
+      class="row"
+    >
+      <div
+        class="ui active indeterminate text centered inline loader"
+      >
+        Loading TODOs
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

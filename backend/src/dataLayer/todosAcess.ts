@@ -45,7 +45,10 @@ export class TodoAccess {
         TableName: this.todoTable,
         IndexName: this.indexName,
         KeyConditionExpression: 'userId = :userId',
-        FilterExpression: 'name = :name',
+        FilterExpression: '#name = :name',
+        ExpressionAttributeNames: {
+          '#name': 'name'
+        },
         ExpressionAttributeValues: {
           ':userId': userId,
           ':name': keyword

@@ -11,10 +11,11 @@ import {
   Icon,
   Input,
   Image,
-  Loader
+  Loader,
+  Confirm
 } from 'semantic-ui-react'
 
-import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
+import { createTodo, deleteTodo, getSearchTodo, getTodos, patchTodo } from '../api/todos-api'
 import Auth from '../auth/Auth'
 import { Todo } from '../types/Todo'
 
@@ -27,21 +28,38 @@ interface TodosState {
   todos: Todo[]
   newTodoName: string
   loadingTodos: boolean
+  keyword: string
+  openModel: boolean
+  todoId: string
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
   state: TodosState = {
     todos: [],
     newTodoName: '',
-    loadingTodos: true
+    loadingTodos: true,
+    keyword: '',
+    openModel: false,
+    todoId: ''
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ newTodoName: event.target.value })
   }
 
+  handleKeyWordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ keyword: event.target.value })
+  }
+
   onEditButtonClick = (todoId: string) => {
     this.props.history.push(`/todos/${todoId}/edit`)
+  }
+
+  onLoadingData = () => {
+    this.setState({
+      ...this.state,
+      loadingTodos: true
+    })
   }
 
   onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
@@ -60,15 +78,35 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     }
   }
 
-  onTodoDelete = async (todoId: string) => {
+  onSearchTodo = async (event: React.ChangeEvent<HTMLButtonElement>) => {
+    this.onLoadingData()
     try {
-      await deleteTodo(this.props.auth.getIdToken(), todoId)
-      this.setState({
-        todos: this.state.todos.filter(todo => todo.todoId !== todoId)
-      })
+      if (this.state.keyword) {
+        const todos = await getSearchTodo(this.props.auth.getIdToken(), this.state.keyword)
+        this.setState({
+          todos,
+          loadingTodos: false
+        })
+      } else {
+        const todos = await getTodos(this.props.auth.getIdToken())
+        this.setState({
+          todos,
+          loadingTodos: false
+        })
+      }
+
     } catch {
-      alert('Todo deletion failed')
+      alert('Todo creation failed')
     }
+  }
+
+
+  onTodoDelete = async (todoId: string) => {
+    this.setState({
+      ...this.state,
+      todoId,
+      openModel: true
+    })
   }
 
   onTodoCheck = async (pos: number) => {
@@ -83,6 +121,25 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         todos: update(this.state.todos, {
           [pos]: { done: { $set: !todo.done } }
         })
+      })
+    } catch {
+      alert('Todo deletion failed')
+    }
+  }
+
+  onHandleCancel = () => {
+    this.setState({
+      ...this.state,
+      openModel: false
+    })
+  }
+
+  onHandleConfirm = async () => {
+    try {
+      await deleteTodo(this.props.auth.getIdToken(), this.state.todoId)
+      this.setState({
+        todos: this.state.todos.filter(todo => todo.todoId !== this.state.todoId),
+        openModel: false
       })
     } catch {
       alert('Todo deletion failed')
@@ -106,7 +163,16 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       <div>
         <Header as="h1">TODOs</Header>
 
+        <Confirm
+          content='Are you sure you want to delete this task?'
+          open={this.state.openModel}
+          onCancel={this.onHandleCancel}
+          onConfirm={this.onHandleConfirm}
+        />
+
         {this.renderCreateTodoInput()}
+
+        {this.renderSearchTodoInput()}
 
         {this.renderTodos()}
       </div>
@@ -129,6 +195,31 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
             actionPosition="left"
             placeholder="To change the world..."
             onChange={this.handleNameChange}
+          />
+        </Grid.Column>
+        <Grid.Column width={16}>
+          <Divider />
+        </Grid.Column>
+      </Grid.Row>
+    )
+  }
+
+  renderSearchTodoInput() {
+    return (
+      <Grid.Row>
+        <Grid.Column width={16}>
+          <Input
+            action={{
+              color: 'teal',
+              labelPosition: 'left',
+              icon: 'search',
+              content: 'Search task',
+              onClick: this.onSearchTodo
+            }}
+            fluid
+            actionPosition="left"
+            placeholder="Press keyword to search..."
+            onChange={this.handleKeyWordChange}
           />
         </Grid.Column>
         <Grid.Column width={16}>
@@ -161,44 +252,46 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       <Grid padded>
         {this.state.todos.map((todo, pos) => {
           return (
-            <Grid.Row key={todo.todoId}>
-              <Grid.Column width={1} verticalAlign="middle">
-                <Checkbox
-                  onChange={() => this.onTodoCheck(pos)}
-                  checked={todo.done}
-                />
-              </Grid.Column>
-              <Grid.Column width={10} verticalAlign="middle">
-                {todo.name}
-              </Grid.Column>
-              <Grid.Column width={3} floated="right">
-                {todo.dueDate}
-              </Grid.Column>
-              <Grid.Column width={1} floated="right">
-                <Button
-                  icon
-                  color="blue"
-                  onClick={() => this.onEditButtonClick(todo.todoId)}
-                >
-                  <Icon name="pencil" />
-                </Button>
-              </Grid.Column>
-              <Grid.Column width={1} floated="right">
-                <Button
-                  icon
-                  color="red"
-                  onClick={() => this.onTodoDelete(todo.todoId)}
-                >
-                  <Icon name="delete" />
-                </Button>
-              </Grid.Column>
-              {todo.attachmentUrl && (
-                <Image src={todo.attachmentUrl} size="small" wrapped onError={(i: any) => i.target.style.display = 'none'} />
-              )}
+            <>
+              <Grid.Row key={todo.todoId} color={!todo.done ? 'grey' : undefined} >
+                <Grid.Column width={1} verticalAlign="middle">
+                  <Checkbox
+                    onChange={() => this.onTodoCheck(pos)}
+                    checked={todo.done}
+                  />
+                </Grid.Column>
+                <Grid.Column width={10} verticalAlign="middle">
+                  {todo.name}
+                </Grid.Column>
+                <Grid.Column width={3} floated="right">
+                  {todo.dueDate}
+                </Grid.Column>
+                <Grid.Column width={1} floated="right">
+                  <Button
+                    icon
+                    color="blue"
+                    onClick={() => this.onEditButtonClick(todo.todoId)}
+                  >
+                    <Icon name="pencil" />
+                  </Button>
+                </Grid.Column>
+                <Grid.Column width={1} floated="right">
+                  <Button
+                    icon
+                    color="red"
+                    onClick={() => this.onTodoDelete(todo.todoId)}
+                  >
+                    <Icon name="delete" />
+                  </Button>
+                </Grid.Column>
+                {todo.attachmentUrl && (
+                  <Image src={todo.attachmentUrl} size="small" wrapped onError={(i: any) => i.target.style.display = 'none'} />
+                )}
+              </Grid.Row>
               <Grid.Column width={16}>
                 <Divider />
               </Grid.Column>
-            </Grid.Row>
+            </>
           )
         })}
       </Grid>
